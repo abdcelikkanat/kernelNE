@@ -174,8 +174,8 @@ void Model::update_rule_gaussian_kernel(vector <double> labels, int centerId, ve
 //        this->neule2[d] = 0.0;
 //        this->diff2[d] = 0.0;
 //    }
-    memset(this->neule2, 0.0, this->dim_size);
-    memset(this->diff2, 0.0, this->dim_size);
+    std::memset(this->neule2, 0.0, this->dim_size);
+    std::memset(this->diff2, 0.0, this->dim_size);
 
     for(int i = 0; i < contextIds.size(); i++) {
 
@@ -940,7 +940,7 @@ void Model::run() {
 
 //   ------->                         for (int i = 0; i < negative_sample_size; i++)
 //   ------->                             contextIds[i+1] = neg_sample_ids[line_id*document[0].size() + negative_sample_size*context_pos + i]; // <---------
-                            memcpy( &contextIds[1], &neg_sample_ids[line_id*document[0].size() + negative_sample_size*context_pos], sizeof( negative_sample_size ) );
+                            std::memcpy( &contextIds[1], &neg_sample_ids[line_id*document[0].size() + negative_sample_size*context_pos], sizeof( negative_sample_size ) );
 //  ---->                              contextIds[i + 1] = 0; ///neg_sample_ids[i];
                             x[0] = 1.0;
                             fill(x.begin() + 1, x.end(), 0.0);
