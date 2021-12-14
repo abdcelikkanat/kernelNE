@@ -180,6 +180,7 @@ void Model::update_rule_gaussian_kernel(vector <double> labels, int centerId, ve
     for(int i = 0; i < contextIds.size(); i++) {
 
         eta = 0.0;
+
         for (int d = 0; d < this->dim_size; d++) {
             this->diff2[d] = this->emb1[contextIds[i]][d] - this->emb0[centerId][d];
 
@@ -200,13 +201,13 @@ void Model::update_rule_gaussian_kernel(vector <double> labels, int centerId, ve
             this->neule2[d] += this->g2[d]; /////////////
 //        }
 //
-//        for (int d = 0; d < this->dim_size; d++)
-//            this->emb1[contextIds[i]][d] += this->g2[d] - current_lr*this->lambda*(this->emb1[contextIds[i]][d]);
+//  -      for (int d = 0; d < this->dim_size; d++)
+            this->emb1[contextIds[i]][d] += this->g2[d] - current_lr*this->lambda*(this->emb1[contextIds[i]][d]);
 
         }
     }
-//    for (int d = 0; d < this->dim_size; d++)
-//        this->emb0[centerId][d] += -this->neule2[d] - current_lr*this->lambda*(this->emb0[centerId][d]);
+    for (int d = 0; d < this->dim_size; d++)
+        this->emb0[centerId][d] += -this->neule2[d] - current_lr*this->lambda*(this->emb0[centerId][d]);
 
 
 
@@ -940,7 +941,7 @@ void Model::run() {
 
 //   ------->                         for (int i = 0; i < negative_sample_size; i++)
 //   ------->                             contextIds[i+1] = neg_sample_ids[line_id*document[0].size() + negative_sample_size*context_pos + i]; // <---------
-                            std::memcpy( &contextIds[1], &neg_sample_ids[line_id*document[0].size() + negative_sample_size*context_pos], sizeof( negative_sample_size ) );
+                            std::memcpy( &contextIds[1], &neg_sample_ids[line_id*document[0].size() + negative_sample_size*context_pos], negative_sample_size );
 //  ---->                              contextIds[i + 1] = 0; ///neg_sample_ids[i];
                             x[0] = 1.0;
                             fill(x.begin() + 1, x.end(), 0.0);
