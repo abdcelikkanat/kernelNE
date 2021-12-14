@@ -40,6 +40,12 @@ Model::Model(string &corpusFile, string &kernel, double *kernelParams,
     }
 
 
+    this->neule2 = new double[this->dim_size]; // <----
+    this->diff2 = new double[this->dim_size];// <----
+    this->z2 = new double[this->dim_size];// <----
+    this->g2 = new double[this->dim_size];// <----
+
+
 }
 
 Model::~Model() {
@@ -152,66 +158,62 @@ void Model::update_rule_nokernel(vector <double> labels, int centerId, vector <i
 
 void Model::update_rule_gaussian_kernel(vector <double> labels, int centerId, vector <int> contextIds, double current_lr ) {
 
-    double *neule;
-    double *z, *g, eta, *diff;
+//    double *neule;
+//    double *z, *g,
+    double eta;
+//    *diff;
     double e;
     double var = this->sigma * this->sigma;
 
-    neule = new double[this->dim_size];
-    diff = new double[this->dim_size];
-    z = new double[this->dim_size];
-    g = new double[this->dim_size];
+//    neule = new double[this->dim_size];
+//    diff = new double[this->dim_size];
+//    z = new double[this->dim_size];
+//    g = new double[this->dim_size];
 
-    for (int d = 0; d < this->dim_size; d++) {
-        neule[d] = 0.0;
-        diff[d] = 0.0;
-    }
+//    for (int d = 0; d < this->dim_size; d++) {
+//        this->neule2[d] = 0.0;
+//        this->diff2[d] = 0.0;
+//    }
+    memset(this->neule2, 0.0, this->dim_size);
+    memset(this->diff2, 0.0, this->dim_size);
 
     for(int i = 0; i < contextIds.size(); i++) {
 
-        for (int d = 0; d < this->dim_size; d++)
-            diff[d] = this->emb1[contextIds[i]][d] - this->emb0[centerId][d];
-
         eta = 0.0;
-        for (int d = 0; d < this->dim_size; d++)
-            eta += diff[d]*diff[d];
+        for (int d = 0; d < this->dim_size; d++) {
+            this->diff2[d] = this->emb1[contextIds[i]][d] - this->emb0[centerId][d];
 
-        /*
-        if(labels[i] == 1) {
-            e = exp( -eta/(2.0*var) );
-            for (int d = 0; d < this->dim_size; d++)
-                z[d] = 2.0 * ( 1-e  ) * ( e ) * ( diff[d]/var );
-                //z[d] = 2.0 * ( 1-e  ) * ( -e ) * ( - diff[d]/var );
-        } else {
-            e = exp( -eta/var );
-            for (int d = 0; d < this->dim_size; d++)
-                z[d] = 2.0 * e * ( -diff[d]/var );
+
+//        for (int d = 0; d < this->dim_size; d++)
+            eta += this->diff2[d]*this->diff2[d];
         }
-        */
+
         e = exp( -eta/(2.0*var) );
-        for (int d = 0; d < this->dim_size; d++)
-            z[d] = 2.0 * ( labels[i]-e  ) * ( e ) * ( diff[d]/var );
+        for (int d = 0; d < this->dim_size; d++) {
+            this->z2[d] = 2.0 * ( labels[i]-e  ) * ( e ) * ( this->diff2[d]/var );
         ///////
 
-        for (int d = 0; d < this->dim_size; d++)
-            g[d] = -current_lr * z[d]; // minus comes from the objective function, minimization
+//        for (int d = 0; d < this->dim_size; d++)
+            this->g2[d] = -current_lr * this->z2[d]; // minus comes from the objective function, minimization
 
-        for (int d = 0; d < this->dim_size; d++) {
-            neule[d] += g[d]; /////////////
+//        for (int d = 0; d < this->dim_size; d++) {
+            this->neule2[d] += this->g2[d]; /////////////
+//        }
+//
+//        for (int d = 0; d < this->dim_size; d++)
+//            this->emb1[contextIds[i]][d] += this->g2[d] - current_lr*this->lambda*(this->emb1[contextIds[i]][d]);
+
         }
-
-        for (int d = 0; d < this->dim_size; d++)
-            this->emb1[contextIds[i]][d] += g[d] - current_lr*this->lambda*(this->emb1[contextIds[i]][d]);
     }
-    for (int d = 0; d < this->dim_size; d++)
-        this->emb0[centerId][d] += -neule[d] - current_lr*this->lambda*(this->emb0[centerId][d]);
+//    for (int d = 0; d < this->dim_size; d++)
+//        this->emb0[centerId][d] += -this->neule2[d] - current_lr*this->lambda*(this->emb0[centerId][d]);
 
 
 
-    delete[] neule;
-    delete [] diff;
-    delete [] z;
-    delete [] g;
+//    delete[] neule;
+//    delete [] diff;
+//    delete [] z;
+//    delete [] g;
 }
 
 void Model::update_rule_schoenberg_kernel(vector <double> labels, int centerId, vector <int> contextIds, double current_lr) {
@@ -859,19 +861,45 @@ void Model::run() {
         double current_alpha = this->lr;
         int processed_node_count = 0;
 
+        vector <vector <string>> document;
+        vector <string> mynodesInLine;
+
+        // Read the document
+        cout << "Start" << endl;
+        fs.clear();
+        fs.seekg(0, ios::beg);
+        while (getline(fs, line)) {
+                stringstream ss(line);
+                while (getline(ss, token, ' '))
+                    mynodesInLine.push_back(token);
+
+                document.push_back(mynodesInLine);
+                mynodesInLine.clear();
+        }
+        neg_sample_ids = new int[negative_sample_size*document.size()*document[0].size()]; // <---------------
+        uni.sample(negative_sample_size*document.size()*document[0].size(), neg_sample_ids);
+
+        // Resize
+                    contextIds.resize((int) negative_sample_size + 1);
+                    x.resize((int) negative_sample_size + 1);
+
+        cout << "SON" << endl;
 
         cout << "--> The update of the model parameters has started." << endl;
 
         for(int iter=0; iter<num_of_iters; iter++) {
 
-            fs.clear();
-            fs.seekg(0, ios::beg);
-            cout << "    + Iteration: " << iter+1 << "/" << this->num_of_iters << endl;
-
-            while (getline(fs, line)) {
-                stringstream ss(line);
-                while (getline(ss, token, ' '))
-                    nodesInLine.push_back(token);
+//            fs.clear();
+//            fs.seekg(0, ios::beg);
+//            cout << "    + Iteration: " << iter+1 << "/" << this->num_of_iters << endl;
+//
+//            while (getline(fs, line)) {
+//                stringstream ss(line);
+//                while (getline(ss, token, ' '))
+//                    nodesInLine.push_back(token);
+            int line_id = 0; // <--------
+            for(auto nodesInLine : document )    {
+               line_id += 1; // <-----------
 
                 for (int center_pos = 0; center_pos < nodesInLine.size(); center_pos++) {
 
@@ -896,10 +924,11 @@ void Model::run() {
                     center_node = nodesInLine[center_pos];
                     centerId = node2Id[center_node];
 
-                    // Resize
-                    contextIds.resize((int) negative_sample_size + 1);
-                    x.resize((int) negative_sample_size + 1);
-                    neg_sample_ids = new int[negative_sample_size];
+                    //Resize
+//  ------->                   contextIds.resize((int) negative_sample_size + 1);
+//  ------->                   x.resize((int) negative_sample_size + 1);
+// ------->                    neg_sample_ids = new int[negative_sample_size];
+
 
                     for (int context_pos = context_start_pos; context_pos <= context_end_pos; context_pos++) {
 
@@ -907,9 +936,12 @@ void Model::run() {
                             context_node = nodesInLine[context_pos];
 
                             contextIds[0] = node2Id[context_node];
-                            uni.sample(negative_sample_size, neg_sample_ids);
-                            for (int i = 0; i < negative_sample_size; i++)
-                                contextIds[i + 1] = neg_sample_ids[i];
+// ---->     uni.sample(negative_sample_size, neg_sample_ids);
+
+//   ------->                         for (int i = 0; i < negative_sample_size; i++)
+//   ------->                             contextIds[i+1] = neg_sample_ids[line_id*document[0].size() + negative_sample_size*context_pos + i]; // <---------
+                            memcpy( &contextIds[1], &neg_sample_ids[line_id*document[0].size() + negative_sample_size*context_pos], sizeof( negative_sample_size ) );
+//  ---->                              contextIds[i + 1] = 0; ///neg_sample_ids[i];
                             x[0] = 1.0;
                             fill(x.begin() + 1, x.end(), 0.0);
 
@@ -972,14 +1004,14 @@ void Model::run() {
                     // Increase the node count
                     processed_node_count++;
 
-                    // Clear the vectors
-                    contextIds.clear();
-                    x.clear();
-                    delete[] neg_sample_ids;
+//                    // Clear the vectors
+//                    contextIds.clear();
+//                    x.clear();
+//       --------->             delete[] neg_sample_ids;
                 }
 
 
-                nodesInLine.clear();
+//                nodesInLine.clear();
 
             }
             cout << endl;
@@ -988,10 +1020,16 @@ void Model::run() {
         fs.close();
 
         cout << endl << "Done" << endl;
+     // Clear the vectors
+                    contextIds.clear();// <-------------
+                    x.clear(); // <-------------
+       delete[] neg_sample_ids; // <-------------
 
     } else {
         cout << "An error occurred during reading file!" << endl;
     }
+
+
 
     for(int k=0; k<numOfKernels; k++) {
         cout << kernelCoefficients[k] << " " << endl;

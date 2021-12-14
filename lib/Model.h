@@ -55,6 +55,8 @@ private:
     void inf_poly_kernel(double alpha, vector <double> labels, int centerId, vector <int> contextIds);
     void update_gaussian_multiple_kernel2(vector <double> labels, int centerId, vector <int> contextIds, double current_lr, int numOfKernels, double *kernelCoefficients);
 
+    double *neule2, *z2, *g2, *d2, *diff2;
+
 public:
 
     Model(string &corpusFile, string &kernel, double *kernelParams,
