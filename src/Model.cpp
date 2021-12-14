@@ -1,5 +1,6 @@
 #include "Model.h"
 //#include "lp_lib.h"
+#include <cstring>
 
 Model::Model(string &corpusFile, string &kernel, double *kernelParams,
              unsigned int &dimension, unsigned int &window, unsigned int &neg,
