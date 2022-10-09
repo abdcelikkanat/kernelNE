@@ -32,4 +32,4 @@ kernelNE --help
 #### References
 A. Celikkanat and F. D. Malliaros, [Kernel Node Embeddings](https://doi.org/10.1109/GlobalSIP45357.2019.8969363), 7th IEEE Global Conference on Signal and Information Processing (GlobalSIP), 2019 
 
-A. Celikkanat, Y. Shen and F. D. Malliaros, [Multiple Kernel Representation Learning on Networks](https://arxiv.org/abs/2106.05057), Manuscript, 2021
+A. Celikkanat, Y. Shen and F. D. Malliaros, [Multiple Kernel Representation Learning on Networks](https://doi.org/10.1109/TKDE.2022.3172048), IEEE Transactions on Knowledge and Data Engineering, 2022
